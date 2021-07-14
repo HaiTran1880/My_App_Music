@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -65,7 +65,11 @@ const ItemSong = props => {
   const [isPlay, setIsPlay] = useState(false);
 
   const playMusic = () => {
-    SoundPlayer.stop();
+    if (isPlay) {
+      SoundPlayer.pause();
+    } else {
+      SoundPlayer.resume();
+    }
     if (index == songPlaying.id - 1) {
       if (id == songPlaying.id) {
         setIsPlay(!isPlay);
@@ -99,20 +103,51 @@ const ItemSong = props => {
     </TouchableOpacity>
   );
 };
+
 const MusicScreen = ({params}) => {
   const navigation = useNavigation();
+  const [infoTime, setInfoTime] = useState(0);
   const [songPlaying, setSongPlaying] = useState(data.songs[0]);
   const [indexSongPlaying, setIndexSongPlaying] = useState(0);
+  const [like, setLike] = useState(false);
   const play = (item, index) => {
     let song = data.songs.find(x => x.id === item);
     setSongPlaying(song);
     setIndexSongPlaying(index);
-    console.log(index);
-
     SoundPlayer.loadSoundFile(data.songs[index].fileName, 'mp3');
-    SoundPlayer.play();
+    // getInfo();
+    //SoundPlayer.play();
   };
 
+  //get InFor Music time Play
+  async function getInfo() {
+    try {
+      const info = await SoundPlayer.getInfo();
+      setInfoTime(info);
+      return info;
+    } catch (e) {
+      console.log('There is no song playing', e);
+    }
+  }
+
+  useEffect(() => {
+    if (infoTime === 0) {
+      SoundPlayer.loadSoundFile(data.songs[0].fileName, 'mp3');
+    }
+    getInfo();
+  }, [songPlaying]);
+
+  const gotoPlayMode = () => {
+    getInfo();
+    console.log(infoTime);
+    //SoundPlayer.pause();
+    /* 1. Navigate to the Details route with params */
+    // navigation.navigate('PLAYMUSICMODE', {
+    //   song: {songPlaying},
+    //   index: {indexSongPlaying},
+    //   info: infoTime,
+    // });
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -130,19 +165,16 @@ const MusicScreen = ({params}) => {
             justifyContent: 'space-between',
           }}>
           <NeuMorph>
-            <TouchableOpacity>
-              <Ionicon name="heart" size={25} color="#91A1BD" />
+            <TouchableOpacity onPress={() => setLike(!like)}>
+              <Ionicon
+                name="heart"
+                size={25}
+                color={like ? 'red' : '#91A1BD'}
+              />
             </TouchableOpacity>
           </NeuMorph>
           <NeuMorph>
-            <TouchableOpacity
-              onPress={() => {
-                /* 1. Navigate to the Details route with params */
-                navigation.navigate('PLAYMUSICMODE', {
-                  song: {songPlaying},
-                  index: {indexSongPlaying},
-                });
-              }}>
+            <TouchableOpacity onPress={gotoPlayMode}>
               <Animated.Image
                 resizeMode="cover"
                 style={styles.imageSong}

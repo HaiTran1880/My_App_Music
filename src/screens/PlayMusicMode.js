@@ -16,7 +16,7 @@ import data from '../constants/index';
 import Slider from 'react-native-slider';
 import Controller from './Controller';
 import Ionicon from 'react-native-vector-icons/Ionicons';
-
+import SoundPlayer from 'react-native-sound-player';
 const {width, height} = Dimensions.get('window');
 
 const NeuMorph = ({children, size, style}) => {
@@ -40,12 +40,23 @@ const NeuMorph = ({children, size, style}) => {
   );
 };
 
+const fomatTime = time => {
+  let roundTime = Math.floor(time);
+  if (time % 60 < 10) {
+    return Math.floor(roundTime / 60) + ':0' + (roundTime % 60);
+  } else {
+    return Math.floor(roundTime / 60) + ':' + (roundTime % 60);
+  }
+};
+
 export default function PlayMusicMode({route, navigation}) {
-  // const [isPlay, setIsPlay] = useState(true);
-  const {song, index} = route.params;
+  const {song, index, info} = route.params;
   const scrollX = useRef(new Animated.Value(0)).current;
   const slider = useRef(null);
   const [songIndex, setSongIndex] = useState(0);
+  const [currentTime, setCurrentTime] = useState('0:00');
+  const [duration, setDuration] = useState('0:00');
+  const [timeSlider, setTimeSlider] = useState('0:00');
   // for tranlating the album art
   const position = useRef(Animated.divide(scrollX, width)).current;
 
@@ -53,10 +64,31 @@ export default function PlayMusicMode({route, navigation}) {
     // position.addListener(({ value }) => {
     //   console.log(value);
     // });
-    if (route != null) {
-      setSongIndex(index.indexSongPlaying);
-      goTo(index.indexSongPlaying);
-    }
+
+    // async function getInfo() {
+    //   try {
+    //     const info = await SoundPlayer.getInfo();
+    //     setInfoTime(info);
+    //     return info;
+    //   } catch (e) {
+    //     console.log('There is no song playing', e);
+    //   }
+    // }
+    // getInfo();
+    const setInfor = () => {
+      if (route != null) {
+        setSongIndex(index.indexSongPlaying);
+        goTo(index.indexSongPlaying);
+        setCurrentTime(Math.floor(info.currentTime));
+        setDuration(Math.floor(info.duration));
+        setTimeSlider(Math.floor(info.currentTime));
+        console.log(timeSlider);
+        console.log(duration);
+      } else {
+      }
+    };
+
+    setInfor();
 
     scrollX.addListener(({value}) => {
       const val = Math.round(value / width);
@@ -75,17 +107,29 @@ export default function PlayMusicMode({route, navigation}) {
       scrollX.removeAllListeners();
     };
   }, []);
+
   const goTo = index => {
     slider.current.scrollToOffset({
       offset: (songIndex + index) * width,
     });
   };
+
   const goNext = () => {
+    if (songIndex < data.songs.length - 1) {
+      SoundPlayer.stop();
+      SoundPlayer.loadSoundFile(data.songs[songIndex + 1].fileName, 'mp3');
+      SoundPlayer.play();
+    }
     slider.current.scrollToOffset({
       offset: (songIndex + 1) * width,
     });
   };
   const goPrv = () => {
+    if (songIndex > 0) {
+      SoundPlayer.stop();
+      SoundPlayer.loadSoundFile(data.songs[songIndex - 1].fileName, 'mp3');
+      SoundPlayer.play();
+    }
     slider.current.scrollToOffset({
       offset: (songIndex - 1) * width,
     });
@@ -93,7 +137,6 @@ export default function PlayMusicMode({route, navigation}) {
   // const playAndPause = () => {
   //   setIsPlay(!isPlay);
   // };
-
   const renderItem = ({index, item}) => {
     return (
       <Animated.View
@@ -213,10 +256,13 @@ export default function PlayMusicMode({route, navigation}) {
             justifyContent: 'space-between',
             marginBottom: 10,
           }}>
-          <Text style={{color: 'gray'}}>1:20</Text>
-          <Text style={{color: 'gray'}}>3:40</Text>
+          <Text style={{color: 'gray'}}>{fomatTime(currentTime)}</Text>
+          <Text style={{color: 'gray'}}>{fomatTime(duration)}</Text>
         </View>
-        <Slider
+        <Animated.Slider
+          value={timeSlider}
+          maximumValue={duration}
+          minimumValue={0}
           minimumTrackTintColor="#8AAFFF"
           maximumTrackTintColor={gray}
           trackStyle={{

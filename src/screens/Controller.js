@@ -2,7 +2,7 @@ import React from 'react';
 import {View, TouchableOpacity, StyleSheet} from 'react-native';
 import Ionicon from 'react-native-vector-icons/Ionicons';
 import {useState} from 'react/cjs/react.development';
-
+import SoundPlayer from 'react-native-sound-player';
 const gray = '#91A1BD';
 
 const NeuMorph = ({children, size, style}) => {
@@ -28,6 +28,14 @@ const NeuMorph = ({children, size, style}) => {
 
 export default function Controller({onNext, onPrv, playAndPause}) {
   const [isPlay, setIsPlay] = useState(true);
+  const handlerPlay = () => {
+    setIsPlay(!isPlay);
+    if (isPlay) {
+      SoundPlayer.pause();
+    } else {
+      SoundPlayer.resume();
+    }
+  };
   return (
     <View style={styles.container}>
       <NeuMorph>
@@ -36,9 +44,7 @@ export default function Controller({onNext, onPrv, playAndPause}) {
         </TouchableOpacity>
       </NeuMorph>
       <NeuMorph>
-        <TouchableOpacity
-          style={styles.btnControll}
-          onPress={() => setIsPlay(!isPlay)}>
+        <TouchableOpacity style={styles.btnControll} onPress={handlerPlay}>
           <Ionicon color="#FFF" name={isPlay ? 'pause' : 'play'} size={30} />
         </TouchableOpacity>
       </NeuMorph>
