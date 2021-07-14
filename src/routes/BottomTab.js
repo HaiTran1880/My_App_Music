@@ -37,6 +37,8 @@ export default function BottomTab() {
                 <Image
                   resizeMode="cover"
                   style={{
+                    borderWidth: 2,
+                    borderColor: focused ? '#FFF' : '#8AAFFF',
                     width: Platform.OS === 'ios' ? 68 : 50,
                     height: Platform.OS === 'ios' ? 68 : 50,
                     borderRadius: 50,
